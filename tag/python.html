@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+        <title>Polyglot Developer - python</title>
+        <link rel="stylesheet" href="http://makkalot.github.io/theme/css/main.css" />
+        <link href="http://makkalot.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Polyglot Developer Atom Feed" />
+
+        <!--[if IE]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+</head>
+
+<body id="index" class="home">
+<a href="https://github.com/makkalot">
+<img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_red_aa0000.png" alt="Fork me on GitHub" />
+</a>
+        <header id="banner" class="body">
+                <h1><a href="http://makkalot.github.io/">Polyglot Developer </a></h1>
+                <nav><ul>
+                    <li><a href="http://makkalot.github.io/pages/about.html">About</a></li>
+                    <li><a href="http://makkalot.github.io/pages/contact.html">Contact</a></li>
+                    <li><a href="http://makkalot.github.io/pages/hire-me.html">Hire Me</a></li>
+                    <li><a href="http://makkalot.github.io/category/django.html">Django</a></li>
+                </ul></nav>
+        </header><!-- /#banner -->
+
+            <aside id="featured" class="body">
+                <article>
+                    <h1 class="entry-title"><a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/">Django Authentication Workflow</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2014-07-13T00:00:00">
+                Published: Sun 13 July 2014
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="http://makkalot.github.io/author/makkalot.html">Makkalot</a>
+        </address>
+<p>In <a href="http://makkalot.github.io/category/django.html">Django</a>. </p>
+<p>tags: <a href="http://makkalot.github.io/tag/django.html">django</a> <a href="http://makkalot.github.io/tag/auth.html">auth</a> <a href="http://makkalot.github.io/tag/python.html">python</a> </p>
+</footer><!-- /.post-info --><h2>Django Authentication</h2>
+<p>The existing Django Documentation explains everything about the Django authentication process in a pretty good way. Directions include adding your back end, replacing the built-in User model and many more. However, despite this good coverage, I had certain problems with seeing the big picture of the overall process. At times when I needed to create a new authentication backend, I always had to glance through the Django source again.</p>
+<p>In this blog entry I’ll focus on the Django source code and documentation -- to be more exact, I will share my findings during reading both the source code and the documentation.</p>
+<h2>Workflow as Pseudocode</h2>
+<p>If I play around with a typical Django app using all the defaults, the authentication process will look like this:</p>
+<ul>
+<li>The user comes to django.contrib.auth.authenticate</li>
+<li>In case this step is successful, the next stop is reaching django.contrib.auth.login</li>
+<li>The final step is the user getting redirected to the successful login page.</li>
+</ul>
+<p>But if I dive deeper and present the process in a detailed way, things will be structured like this:</p>
+<p>django.contrib.auth.authenticate :
+    Traverses all of the registered backends. The backend that is responsible for the user authentication gets assigned to the current user object. Then, the user object is returned back.</p>
+<p>The code is something like this (stripped):</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">authenticate</span><span class="p">(</span><span class="o">**</span><span class="n">credentials</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If the given credentials are valid, return a User object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">get_backends</span><span class="p">():</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">authenticate</span><span class="p">(</span><span class="o">**</span><span class="n">credentials</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">except</span> <span class="n">PermissionDenied</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="c"># Annotate the user object with the path of the backend.</span>
+        <span class="n">user</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">backend</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">user</span>
+</pre></div>
+
+
+<p>The next step is to save the user and his corresponding backend into the session object. This can be done via the login function, present in the django.contrib.auth </p>
+<p>django.contrib.auth.login : </p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">pk</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">BACKEND_SESSION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">backend</span>
+</pre></div>
+
+
+<p>Most of the code you see here is stripped in order to simplify the concept and have you understand it easier. After the user sends back a response to the whole auth/login process, the SessionMiddleware.process_response saves the changed session object into its database. This effectively means that next time the user accesses some of the views, the object will be loaded from this saved point.</p>
+<h2>Checking User in Session</h2>
+<p>But what happens if the user gains access to the predefined login_required views after the login process? In this case, we’re looking at a workflow structured like this:</p>
+<ul>
+<li>SessionMiddleware loads the data of the current user in the request object from the session storage</li>
+<li>AuthenticationMiddleware then loads the user from the session database and sets it as an attribute in the request object</li>
+<li>And finally, the user has passed the auth check successfully and he can access the requested page</li>
+</ul>
+<p>Again, if I break the process down and present it in a more in-depth manner, things will be structured like this:</p>
+<p>django.contrib.sessions.middleware.SessionMiddleware : Loads the session info that is related to the current user :</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">SessionMiddleware</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">process_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="n">engine</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_ENGINE</span><span class="p">)</span>
+        <span class="n">session_key</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">COOKIES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_COOKIE_NAME</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">SessionStore</span><span class="p">(</span><span class="n">session_key</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The next step to be taken is:</p>
+<p>django.contrib.auth.middleware.AuthenticationMiddleware : This part is responsible for loading the backend which was saved above (login function). It also prompts the backend 'get_user' method to load the user object. It is something like:</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">AnonymousUser</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">user_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_KEY</span><span class="p">]</span>
+        <span class="n">backend_path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">BACKEND_SESSION_KEY</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="n">backend_path</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">AUTHENTICATION_BACKENDS</span>
+        <span class="n">backend</span> <span class="o">=</span> <span class="n">load_backend</span><span class="p">(</span><span class="n">backend_path</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span> <span class="ow">or</span> <span class="n">AnonymousUser</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">AnonymousUser</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">user</span>
+
+<span class="n">request</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">get_user</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+</pre></div>
+
+
+<p>I should note that if the user is not found either in the session store or the authentication backend, the AnonymousUser will be returned back. After undertaking such a step, the request object will now have a ‘user’ attribute assigned to it. In such a case you can easily check if a certain user is authenticated by typing:</p>
+<div class="highlight"><pre><span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">():</span>
+    <span class="c">#do some auth stuff</span>
+</pre></div>
+
+
+<p>Actually, that is how login_required decorator is implemented. It checks for existing user.is_authenticated() condition on current user.</p>
+<h2>Summary</h2>
+<p>To summarize all of this, Django caches the user’s authentication backend when the login process is successful. After consecutive requests, this info gets extracted from the session store and is then used to load the user object into the current request.</p>
+<p>Finally, the views that need to check if a user is authenticated in a valid way can do so by invoking the the is_authenticated method of the aforementioned user.</p><p>There are <a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/#disqus_thread">comments</a>.</p>                </article>
+<p class="paginator">
+    Page 1 / 1
+</p>
+            </aside><!-- /#featured -->
+        <section id="extras" class="body">
+                <div class="blogroll">
+                        <h2>blogroll</h2>
+                        <ul>
+                            <li><a href="http://makkalot.com/">Turkish Blog</a></li>
+                            <li><a href="http://makkalot-opensource.blogspot.com/">Old English Blog</a></li>
+                        </ul>
+                </div><!-- /.blogroll -->
+                <div class="social">
+                        <h2>social</h2>
+                        <ul>
+                            <li><a href="http://makkalot.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate">atom feed</a></li>
+
+                            <li><a href="https://twitter.com/makkalot">Follow Me</a></li>
+                            <li><a href="https://github.com/makkalot">Fork</a></li>
+                        </ul>
+                </div><!-- /.social -->
+        </section><!-- /#extras -->
+
+        <footer id="contentinfo" class="body">
+                <address id="about" class="vcard body">
+                Proudly powered by <a href="http://getpelican.com/">Pelican</a>, which takes great advantage of <a href="http://python.org">Python</a>.
+                </address><!-- /#about -->
+
+                <p>The theme is by <a href="http://coding.smashingmagazine.com/2009/08/04/designing-a-html-5-layout-from-scratch/">Smashing Magazine</a>, thanks!</p>
+        </footer><!-- /#contentinfo -->
+
+    <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-24728213-3']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+    </script>
+<script type="text/javascript">
+    var disqus_shortname = 'makkalotenblog';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+</body>
+</html>
