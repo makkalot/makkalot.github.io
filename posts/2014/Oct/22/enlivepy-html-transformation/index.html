@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
         <meta charset="utf-8" />
-        <title>Polyglot Developer</title>
+        <title>Enlivepy A Different Approach to Html Templating in Python</title>
         <link rel="stylesheet" href="http://makkalot.github.io/theme/css/main.css" />
         <link href="http://makkalot.github.io/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Polyglot Developer Atom Feed" />
 
@@ -22,13 +22,18 @@
                     <li><a href="http://makkalot.github.io/pages/contact.html">Contact</a></li>
                     <li><a href="http://makkalot.github.io/pages/hire-me.html">Hire Me</a></li>
                     <li><a href="http://makkalot.github.io/category/django.html">Django</a></li>
-                    <li><a href="http://makkalot.github.io/category/python.html">Python</a></li>
+                    <li class="active"><a href="http://makkalot.github.io/category/python.html">Python</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/" rel="bookmark"
+           title="Permalink to Enlivepy A Different Approach to Html Templating in Python">Enlivepy A Different Approach to Html Templating in Python</a></h1>
+    </header>
 
-            <aside id="featured" class="body">
-                <article>
-                    <h1 class="entry-title"><a href="http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/">Enlivepy A Different Approach to Html Templating in Python</a></h1>
+    <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2014-10-22T00:00:00">
                 Published: Wed 22 October 2014
@@ -39,7 +44,7 @@
         </address>
 <p>In <a href="http://makkalot.github.io/category/python.html">Python</a>. </p>
 <p>tags: <a href="http://makkalot.github.io/tag/django.html">django</a> <a href="http://makkalot.github.io/tag/template.html">template</a> <a href="http://makkalot.github.io/tag/python.html">python</a> </p>
-</footer><!-- /.post-info --><p><br/></p>
+</footer><!-- /.post-info -->      <p><br/></p>
 <h2>The Problem About Html Templating</h2>
 <p>Don’t worry - this blog entry won’t consist of me rambling about yet another templating engine that will change the world. Instead, I’ll be focusing on a practical aspect - the problems the current HTML templating libraries have and what can be possibly done about these issues.</p>
 <p>Django and all other MVC/MVP frameworks do a great job at separating the Controller logic from the View logic. This way you can have all your complex operations in Controller and send back the data that needs to be shown or rendered to the end user. On the other end of this process you have a templating library - it takes Python objects and renders them.</p>
@@ -333,40 +338,26 @@ python manage.py runserver
 <p>Enlivepy is still a pretty new and fresh concept I’ve been working on. Without any doubt there is a lot room of improvement. Examples that come off the top of my head include performance optimization or adding some missing parts from the original implementation.</p>
 <p>I’ve started using it on my personal projects and it has been  both effective and fun. However, it is definitely not ready for mainstream production usage. Hopefully after some more tinkering around with it, it maybe a very good solution to many of the problems found in traditional template-based programming.</p>
 <p>So, in this post I did my best to explain how Enlivepy works and what current issues it aims to solve. I hope it’s been an interesting and educational read! I’d also love to hear your ways of tackling the problems you encounter with the current templating systems. How do you do it and is it effective?</p>
-<p>Let me know in the comments below!</p><p>There are <a href="http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/#disqus_thread">comments</a>.</p>                </article>
-            </aside><!-- /#featured -->
-                <section id="content" class="body">
-                    <h1>Other articles</h1>
-                    <hr />
-                    <ol id="posts-list" class="hfeed">
+<p>Let me know in the comments below!</p>
+    </div><!-- /.entry-content -->
+    <div class="comments">
+      <h2>Comments !</h2>
+      <div id="disqus_thread"></div>
+      <script type="text/javascript">
+        var disqus_shortname = 'makkalotenblog';
+        var disqus_identifier = 'posts/2014/Oct/22/enlivepy-html-transformation/';
+        var disqus_url = 'http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/';
+        (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = '//makkalotenblog.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+      </script>
+      <noscript>Please enable JavaScript to view the comments.</noscript>
+    </div>
 
-            <li><article class="hentry">
-                <header>
-                    <h1><a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/" rel="bookmark"
-                           title="Permalink to Django Authentication Workflow">Django Authentication Workflow</a></h1>
-                </header>
-
-                <div class="entry-content">
-<footer class="post-info">
-        <abbr class="published" title="2014-07-13T00:00:00">
-                Published: Sun 13 July 2014
-        </abbr>
-
-        <address class="vcard author">
-                By                         <a class="url fn" href="http://makkalot.github.io/author/makkalot.html">Makkalot</a>
-        </address>
-<p>In <a href="http://makkalot.github.io/category/django.html">Django</a>. </p>
-<p>tags: <a href="http://makkalot.github.io/tag/django.html">django</a> <a href="http://makkalot.github.io/tag/auth.html">auth</a> <a href="http://makkalot.github.io/tag/python.html">python</a> </p>
-</footer><!-- /.post-info -->                <h2>Django Authentication</h2>
-<p>The existing Django Documentation explains everything about the Django authentication process in a pretty good way. Directions include adding your back end, replacing the built-in User model and many more. However, despite this good coverage, I had certain problems with seeing the big picture of the overall process ...</p>
-                <a class="readmore" href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/">read more</a>
-<p>There are <a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/#disqus_thread">comments</a>.</p>                </div><!-- /.entry-content -->
-            </article></li>
-                </ol><!-- /#posts-list -->
-<p class="paginator">
-    Page 1 / 1
-</p>
-                </section><!-- /#content -->
+  </article>
+</section>
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>blogroll</h2>

@@ -22,12 +22,331 @@
                     <li><a href="http://makkalot.github.io/pages/contact.html">Contact</a></li>
                     <li><a href="http://makkalot.github.io/pages/hire-me.html">Hire Me</a></li>
                     <li><a href="http://makkalot.github.io/category/django.html">Django</a></li>
+                    <li><a href="http://makkalot.github.io/category/python.html">Python</a></li>
                 </ul></nav>
         </header><!-- /#banner -->
 
             <aside id="featured" class="body">
                 <article>
-                    <h1 class="entry-title"><a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/">Django Authentication Workflow</a></h1>
+                    <h1 class="entry-title"><a href="http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/">Enlivepy A Different Approach to Html Templating in Python</a></h1>
+<footer class="post-info">
+        <abbr class="published" title="2014-10-22T00:00:00">
+                Published: Wed 22 October 2014
+        </abbr>
+
+        <address class="vcard author">
+                By                         <a class="url fn" href="http://makkalot.github.io/author/makkalot.html">Makkalot</a>
+        </address>
+<p>In <a href="http://makkalot.github.io/category/python.html">Python</a>. </p>
+<p>tags: <a href="http://makkalot.github.io/tag/django.html">django</a> <a href="http://makkalot.github.io/tag/template.html">template</a> <a href="http://makkalot.github.io/tag/python.html">python</a> </p>
+</footer><!-- /.post-info --><p><br/></p>
+<h2>The Problem About Html Templating</h2>
+<p>Don’t worry - this blog entry won’t consist of me rambling about yet another templating engine that will change the world. Instead, I’ll be focusing on a practical aspect - the problems the current HTML templating libraries have and what can be possibly done about these issues.</p>
+<p>Django and all other MVC/MVP frameworks do a great job at separating the Controller logic from the View logic. This way you can have all your complex operations in Controller and send back the data that needs to be shown or rendered to the end user. On the other end of this process you have a templating library - it takes Python objects and renders them.</p>
+<p>Now, some of these templating libraries argue that having lots of logic in the representation layer is a bad thing (Django templating for example). Others, like Jinja2, are more lax and allow you to do lots of interesting things.</p>
+<p>In both cases what we are actually doing is mixing data with logic. And while this might not seem like a problem with small applications, when you start operating on a greater scale, issues start to appear (a lot). Let me provide a few examples:</p>
+<ul>
+<li>
+<p>Front end developers (CSS/HTML developers) start having difficulties when editing html pages when something does not appear the way it should be appearing. They have to learn the templating engine your framework uses.</p>
+</li>
+<li>
+<p>Sometimes HTML/CSS developers break the logic in html pages by replacing something by mistake.</p>
+</li>
+<li>
+<p>Backend developers are not the best at editing both HTML and CSS (well, in most cases, at least!). I have had this happen to me quite a few times too. I receive the HTML from a designer team, after that I put it into the templating engine...and it has a radically changed appearance. When I compare the way it looks on the server and the original  things are just looking completely different.</p>
+</li>
+<li>
+<p>If HTML/CSS developers need to play or change something on the system, what they need is a working copy of the whole system. You need to give them ssh access to the staging server or something similar.</p>
+</li>
+</ul>
+<p><br/></p>
+<h2>A possible solution to the problem</h2>
+<p>Recently I was playing around with different programming languages like Clojure, Go and Scala. I've found this Clojure library called <a href="https://github.com/cgrand/enlive">enlive</a> that approaches html templating in a slightly different manner. The general idea is you have the html of your site as static entity and you do some transformations on this html by generating a new html to be served on the server. The mentioned transformations are basic functions that take some nodes of html elements and return back new changed elements back. </p>
+<p>This solves some of the painful problems I mentioned before hand. What’s different now is that:</p>
+<ul>
+<li>
+<p>We have a static html that does not include any logic in it. The designer team can edit it any time without breaking the logic. They can also have a fully working version of the representation without the need of having a running server around.</p>
+</li>
+<li>
+<p>The backend team is happy - they don’t have to edit the html and combine it with a certain framework just to see it being radically different than the one they expected to have.</p>
+</li>
+<li>
+<p>The backend team can use all of the programming language tricks without being afraid of polluting the representation with too many logic. </p>
+</li>
+</ul>
+<p>I liked this idea and created a clone of this library for Python programming language. It is called (enlivepy)[https://github.com/makkalot/enlivepy]. The purpose of my current blogpost is to show you a very simple template with a navigation bar. This will illustrate the concept in a pretty easy and educational manner and it will show you how it’s actually put into practice.</p>
+<p><br/></p>
+<h2>Getting Started</h2>
+<p>For the purpose of this blog entry I’ve created an example Django application. The mentioned application replaces the default Django templating with enlivepy html transformation library (I will explain more on this topic in another topic). To start with the application : </p>
+<div class="highlight"><pre>git clone https://github.com/makkalot/django-enlivepy-example.git
+<span class="nb">cd </span>django-enlivepy-example/
+virtualenv venv
+<span class="nb">source </span>venv/bin/activate
+pip install -r requirements.txt
+<span class="nb">cd </span>example/
+python manage.py syncdb
+python manage.py runserver
+</pre></div>
+
+
+<p>If you don't want to wait to the end of the entry, you can check the expected result at :</p>
+<div class="highlight"><pre><span class="nl">http:</span><span class="c1">//127.0.0.1:8000/index/</span>
+</pre></div>
+
+
+<p><br/></p>
+<h1>A Basic Html Static Page</h1>
+<p>The first step will involve starting with a static html page that looks like (this)[https://github.com/makkalot/django-enlivepy-example/blob/master/example/templates/logonav/index.html]. You can open it in your browser to see that it is a working page without any logic in it. To put it brief,  it is something like this (only the parts we're interested are shown): </p>
+<div class="highlight"><pre><span class="nt">&lt;body&gt;</span>
+
+    <span class="c">&lt;!-- Page Content --&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;row&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;col-lg-12&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;h1&gt;</span>Logo Nav by Start Bootstrap<span class="nt">&lt;/h1&gt;</span>
+                <span class="nt">&lt;p&gt;</span>Note: You may need to adjust some CSS based on your needs.<span class="nt">&lt;/p&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="c">&lt;!-- /.container --&gt;</span>
+
+    <span class="c">&lt;!-- jQuery Version 1.11.0 --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;static/js/jquery-1.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+    <span class="c">&lt;!-- Bootstrap Core JavaScript --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;static/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+<span class="nt">&lt;/body&gt;</span>
+</pre></div>
+
+
+<p>The first task is to put some dynamic content inside the "container" which now has some static text. However, before we get there, we need to replace the static paths with those that will work on Django's STATIC_URL paths. For that purpose lets create a mixin : </p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">BaseMediaUrlTemplateMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;STATIC_URL&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;STATIC_URL not set&quot;</span><span class="p">)</span>
+
+        <span class="n">media_url</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;STATIC_URL&quot;</span><span class="p">)</span>
+        <span class="c">#print &quot;MEDIA : &quot;,media_url</span>
+
+        <span class="c">#the next step is to run the at command</span>
+        <span class="n">at</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span>
+           <span class="s">&quot;script&quot;</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trans_path</span><span class="p">,</span> <span class="n">media_url</span><span class="p">,</span> <span class="s">&quot;script&quot;</span><span class="p">,</span> <span class="s">&quot;src&quot;</span><span class="p">),</span>
+           <span class="s">&quot;link&quot;</span><span class="p">,</span>   <span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trans_path</span><span class="p">,</span> <span class="n">media_url</span><span class="p">,</span> <span class="s">&quot;link&quot;</span><span class="p">,</span> <span class="s">&quot;href&quot;</span><span class="p">))</span>
+
+
+    <span class="k">def</span> <span class="nf">trans_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">media_url</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">node</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&quot;http&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+            <span class="c">#do nothing in this case</span>
+            <span class="k">return</span>
+
+        <span class="n">fpath</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">media_url</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s">&quot;/&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">media_url</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="n">attr_fn</span> <span class="o">=</span> <span class="n">set_attr</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">attr_name</span><span class="p">:</span><span class="n">fpath</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">transform</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">tag_name</span><span class="p">,</span> <span class="n">attr_fn</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The most important part of the code above is found in  the transform method. This method takes the selected nodes so far (in this case - the whole page), some arguments which can be passed via view code (render_to_response), and selects the all script and link elements. Afterwards, it transforms their paths with paths that are compatible with Django's STATIC_URL variable. Therefore the transformed page's elements will look like this : </p>
+<div class="highlight"><pre><span class="nx">....</span>
+<span class="o">&lt;</span><span class="nb">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;/static/js/jquery-1.11.0.js&quot;</span><span class="o">&gt;&lt;/</span><span class="nb">script</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="nb">script</span> <span class="n">src</span><span class="o">=</span><span class="s2">&quot;/static/js/bootstrap.min.js&quot;</span><span class="o">&gt;&lt;/</span><span class="nb">script</span><span class="o">&gt;</span>
+<span class="nx">....</span>
+</pre></div>
+
+
+<p><br/></p>
+<h1>The Snippets</h1>
+<p>Enlive has something called a “Snippet” - a concept for reusable html code blocks. The idea here is to have some sort of transformation code that will select a proper part of the html page and then process it. Snippets come in many forms and have to be reusable. So for example a sidebar, navigation, forms, footers and others all count as a snippet. To illustrate this, I’ll create a snippet for the navigation. The static version of navigation looks like <a href="https://github.com/makkalot/django-enlivepy-example/blob/master/example/templates/logonav/nav.html">this</a> :</p>
+<div class="highlight"><pre><span class="nt">&lt;body&gt;</span>
+    <span class="c">&lt;!-- Navigation --&gt;</span>
+    <span class="nt">&lt;nav</span> <span class="na">class=</span><span class="s">&quot;navbar navbar-inverse navbar-fixed-top&quot;</span> <span class="na">role=</span><span class="s">&quot;navigation&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+            <span class="c">&lt;!-- Brand and toggle get grouped for better mobile display --&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar-header&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;button&quot;</span> <span class="na">class=</span><span class="s">&quot;navbar-toggle&quot;</span> <span class="na">data-toggle=</span><span class="s">&quot;collapse&quot;</span> <span class="na">data-target=</span><span class="s">&quot;#bs-example-navbar-collapse-1&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;sr-only&quot;</span><span class="nt">&gt;</span>Toggle navigation<span class="nt">&lt;/span&gt;</span>
+                    <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+                    <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+                    <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+                <span class="nt">&lt;/button&gt;</span>
+                <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">&quot;navbar-brand&quot;</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;http://placehold.it/150x50&amp;text=Logo&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;/a&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="c">&lt;!-- Collect the nav links, forms, and other content for toggling --&gt;</span>
+            <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;collapse navbar-collapse&quot;</span> <span class="na">id=</span><span class="s">&quot;bs-example-navbar-collapse-1&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;nav navbar-nav&quot;</span><span class="nt">&gt;</span>
+                    <span class="nt">&lt;li&gt;</span>
+                        <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>About<span class="nt">&lt;/a&gt;</span>
+                    <span class="nt">&lt;/li&gt;</span>
+                <span class="nt">&lt;/ul&gt;</span>
+            <span class="nt">&lt;/div&gt;</span>
+            <span class="c">&lt;!-- /.navbar-collapse --&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="c">&lt;!-- /.container --&gt;</span>
+    <span class="nt">&lt;/nav&gt;</span>
+
+    <span class="c">&lt;!-- jQuery Version 1.11.0 --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;static/js/jquery-1.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+    <span class="c">&lt;!-- Bootstrap Core JavaScript --&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;static/js/bootstrap.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+
+<span class="nt">&lt;/body&gt;</span>
+</pre></div>
+
+
+<p>As you can see, there is only one link named "About". The purpose of the snippet is to get only the "nav" element, transform its contents with our dynamic navigation links and return only that portion back. Let’s creat this snippet like this:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">TodoNavSnippet</span><span class="p">(</span><span class="n">DjangoSnippet</span><span class="p">):</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s">&quot;logonav/nav.html&quot;</span>
+    <span class="n">selection</span> <span class="o">=</span> <span class="s">&quot;nav.navbar&quot;</span>
+
+    <span class="n">menu_items</span> <span class="o">=</span> <span class="p">(</span><span class="s">&quot;Home&quot;</span><span class="p">,</span> <span class="s">&quot;About&quot;</span><span class="p">,</span> <span class="s">&quot;Services&quot;</span><span class="p">,</span> <span class="s">&quot;Contact&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">navs_fn</span> <span class="o">=</span> <span class="n">clone_for</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">menu_items</span><span class="p">,</span>
+                            <span class="s">&quot;li &gt; a&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">content</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                            <span class="s">&quot;li &gt; a&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="n">set_attr</span><span class="p">(</span><span class="n">href</span><span class="o">=</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">i</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="p">))</span>
+        <span class="n">at</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="s">&quot;ul.nav &gt; li&quot;</span><span class="p">,</span> <span class="n">navs_fn</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nodes</span>
+</pre></div>
+
+
+<p>The snippet above has a certain property called "selection". What it does is selecting only the nodes (with CSS selection) that constitute an interest for us. In my case, it selects "nav.navbar". In its transformation method it uses the <strong>clone_for</strong> transformer function, which duplicates the given node. Therefore, we're able to clone and produce a list for the <strong>menu_items</strong> attribute specified. </p>
+<p>It is useful to note that <strong>template</strong> property finds in the same way Django templating system finds its files. What this means is that you can structure your html static pages as  you would do in normal Django applications. Here’s the generated code for the snippet:</p>
+<div class="highlight"><pre><span class="nt">&lt;nav</span> <span class="na">class=</span><span class="s">&quot;navbar navbar-inverse navbar-fixed-top&quot;</span> <span class="na">role=</span><span class="s">&quot;navigation&quot;</span><span class="nt">&gt;&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+        <span class="c">&lt;!-- Brand and toggle get grouped for better mobile display --&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;navbar-header&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;button</span> <span class="na">type=</span><span class="s">&quot;button&quot;</span> <span class="na">class=</span><span class="s">&quot;navbar-toggle&quot;</span> <span class="na">data-toggle=</span><span class="s">&quot;collapse&quot;</span> <span class="na">data-target=</span><span class="s">&quot;#bs-example-navbar-collapse-1&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;sr-only&quot;</span><span class="nt">&gt;</span>Toggle navigation<span class="nt">&lt;/span&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+                <span class="nt">&lt;span</span> <span class="na">class=</span><span class="s">&quot;icon-bar&quot;</span><span class="nt">&gt;&lt;/span&gt;</span>
+            <span class="nt">&lt;/button&gt;</span>
+            <span class="nt">&lt;a</span> <span class="na">class=</span><span class="s">&quot;navbar-brand&quot;</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>
+                <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">&quot;http://placehold.it/150x50&amp;amp;text=Logo&quot;</span> <span class="na">alt=</span><span class="s">&quot;&quot;</span><span class="nt">&gt;&lt;/a&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+        <span class="c">&lt;!-- Collect the nav links, forms, and other content for toggling --&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;collapse navbar-collapse&quot;</span> <span class="na">id=</span><span class="s">&quot;bs-example-navbar-collapse-1&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;ul</span> <span class="na">class=</span><span class="s">&quot;nav navbar-nav&quot;</span><span class="nt">&gt;&lt;li&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/home/&quot;</span><span class="nt">&gt;</span>Home<span class="nt">&lt;/a&gt;</span>
+                <span class="nt">&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/about/&quot;</span><span class="nt">&gt;</span>About<span class="nt">&lt;/a&gt;</span>
+                <span class="nt">&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/services/&quot;</span><span class="nt">&gt;</span>Services<span class="nt">&lt;/a&gt;</span>
+                <span class="nt">&lt;/li&gt;</span>
+            <span class="nt">&lt;li&gt;</span>
+                    <span class="nt">&lt;a</span> <span class="na">href=</span><span class="s">&quot;/contact/&quot;</span><span class="nt">&gt;</span>Contact<span class="nt">&lt;/a&gt;</span>
+                <span class="nt">&lt;/li&gt;</span>
+
+            <span class="nt">&lt;/ul&gt;&lt;/div&gt;</span>
+        <span class="c">&lt;!-- /.navbar-collapse --&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+    <span class="c">&lt;!-- /.container --&gt;</span>
+<span class="nt">&lt;/nav&gt;</span><span class="c">&lt;!-- Page Content --&gt;</span>
+</pre></div>
+
+
+<p><br/></p>
+<h1>The Template Concept</h1>
+<p>The next step is to replace the static content with dynamic content in the index page and add the transformer navigation node to it. For this purpose I’m going to use enlive's "template" concept. It is very similar to a snippet, but instead of returning a portion of the page, it will return the whole page back. In other words, the template is the part that combines the snippets together, similar to "base.html" in Django.</p>
+<p>Once again, let me demonstrate:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">TodoIndex</span><span class="p">(</span><span class="n">BaseMediaUrlTemplateMixin</span><span class="p">,</span> <span class="n">DjangoTemplate</span><span class="p">):</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="s">&quot;logonav/index.html&quot;</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c">#call the previous one first</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TodoIndex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c">#prepend the navigation snippet</span>
+        <span class="n">nav_snip</span> <span class="o">=</span> <span class="n">TodoNavSnippet</span><span class="p">()</span>
+        <span class="n">navbar</span> <span class="o">=</span> <span class="n">nav_snip</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="n">at</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span>
+           <span class="s">&quot;body&quot;</span><span class="p">,</span> <span class="n">prepend</span><span class="p">(</span><span class="n">navbar</span><span class="p">),</span>
+           <span class="s">&quot;div.col-lg-12 &gt; h1&quot;</span><span class="p">,</span> <span class="n">content</span><span class="p">(</span><span class="s">&quot;Index Todo List&quot;</span><span class="p">),</span>
+           <span class="s">&quot;div.col-lg-12 &gt; p&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+</pre></div>
+
+
+<p>As you can see, what it does first is to call the BaseMediaUrlTemplateMixin class’s transform method which takes care of replacing the script and link tags as a start. Next, I prepend the already created NavigationSnippet to the “body” element. To finish all off, I replace the static content with the dynamic content.</p>
+<p>In the example above I used the  <strong>at</strong> function - it accepts multi selectors with multi transformer functions (you can check documentation for more information).</p>
+<p>The transformed content will now look like this (navigation stripped): </p>
+<div class="highlight"><pre><span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;container&quot;</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;row&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;col-lg-12&quot;</span><span class="nt">&gt;</span>
+            <span class="nt">&lt;h1&gt;</span>Index Todo List<span class="nt">&lt;/h1&gt;</span>
+        <span class="nt">&lt;/div&gt;</span>
+    <span class="nt">&lt;/div&gt;</span>
+<span class="nt">&lt;/div&gt;</span>
+</pre></div>
+
+
+<p><br/></p>
+<h1>Using Enlivepy in Django's Views</h1>
+<p>You can use enlivepy's templates in Django's views as you'd use the Django's default templates. In order to be able to do that, you have to first add the enlipy's template loader in settings:</p>
+<div class="highlight"><pre><span class="n">TEMPLATE_LOADERS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s">&#39;enlivepy.django.loader.EnlivepyLoader&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+
+
+<p>Then you have to put your templates and snippets in a file called enlivetmpl.py in apps you want to have enlivepy enabled. Afterwards, you have to call enlivepy’s registry function <strong>autodiscover</strong> (it’s really the same pattern as Django admin) and put it in a place you know will be loaded as fast as possible (i.e <strong>init</strong>.py)</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">enlivepy.django</span> <span class="kn">as</span> <span class="nn">enlivetmpl</span>
+
+<span class="c">#register the templates here</span>
+<span class="n">enlivetmpl</span><span class="o">.</span><span class="n">autodiscover</span><span class="p">()</span>
+</pre></div>
+
+
+<p>Then at the end of your <strong>enlivetmpl.py</strong> file you have to register the templates you will be calling your views like :</p>
+<div class="highlight"><pre><span class="n">register</span><span class="p">(</span><span class="s">&quot;todo_index&quot;</span><span class="p">,</span> <span class="n">TodoIndex</span><span class="p">())</span>
+</pre></div>
+
+
+<p>I want to bring to your attention the fact that you can name your templates however you wish.</p>
+<p>And finally, in your views you can call your templates as you'd do in normal applications : </p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">TodoIndexView</span><span class="p">(</span><span class="n">TemplateView</span><span class="p">):</span>
+
+    <span class="n">template_name</span> <span class="o">=</span> <span class="s">&quot;todo_index&quot;</span>
+</pre></div>
+
+
+<p><br/></p>
+<h2>Summary</h2>
+<p>Enlivepy is still a pretty new and fresh concept I’ve been working on. Without any doubt there is a lot room of improvement. Examples that come off the top of my head include performance optimization or adding some missing parts from the original implementation.</p>
+<p>I’ve started using it on my personal projects and it has been  both effective and fun. However, it is definitely not ready for mainstream production usage. Hopefully after some more tinkering around with it, it maybe a very good solution to many of the problems found in traditional template-based programming.</p>
+<p>So, in this post I did my best to explain how Enlivepy works and what current issues it aims to solve. I hope it’s been an interesting and educational read! I’d also love to hear your ways of tackling the problems you encounter with the current templating systems. How do you do it and is it effective?</p>
+<p>Let me know in the comments below!</p><p>There are <a href="http://makkalot.github.io/posts/2014/Oct/22/enlivepy-html-transformation/#disqus_thread">comments</a>.</p>                </article>
+            </aside><!-- /#featured -->
+                <section id="content" class="body">
+                    <h1>Other articles</h1>
+                    <hr />
+                    <ol id="posts-list" class="hfeed">
+
+            <li><article class="hentry">
+                <header>
+                    <h1><a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/" rel="bookmark"
+                           title="Permalink to Django Authentication Workflow">Django Authentication Workflow</a></h1>
+                </header>
+
+                <div class="entry-content">
 <footer class="post-info">
         <abbr class="published" title="2014-07-13T00:00:00">
                 Published: Sun 13 July 2014
@@ -38,97 +357,16 @@
         </address>
 <p>In <a href="http://makkalot.github.io/category/django.html">Django</a>. </p>
 <p>tags: <a href="http://makkalot.github.io/tag/django.html">django</a> <a href="http://makkalot.github.io/tag/auth.html">auth</a> <a href="http://makkalot.github.io/tag/python.html">python</a> </p>
-</footer><!-- /.post-info --><h2>Django Authentication</h2>
-<p>The existing Django Documentation explains everything about the Django authentication process in a pretty good way. Directions include adding your back end, replacing the built-in User model and many more. However, despite this good coverage, I had certain problems with seeing the big picture of the overall process. At times when I needed to create a new authentication backend, I always had to glance through the Django source again.</p>
-<p>In this blog entry I’ll focus on the Django source code and documentation -- to be more exact, I will share my findings during reading both the source code and the documentation.</p>
-<h2>Workflow as Pseudocode</h2>
-<p>If I play around with a typical Django app using all the defaults, the authentication process will look like this:</p>
-<ul>
-<li>The user comes to django.contrib.auth.authenticate</li>
-<li>In case this step is successful, the next stop is reaching django.contrib.auth.login</li>
-<li>The final step is the user getting redirected to the successful login page.</li>
-</ul>
-<p>But if I dive deeper and present the process in a detailed way, things will be structured like this:</p>
-<p>django.contrib.auth.authenticate :
-    Traverses all of the registered backends. The backend that is responsible for the user authentication gets assigned to the current user object. Then, the user object is returned back.</p>
-<p>The code is something like this (stripped):</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">authenticate</span><span class="p">(</span><span class="o">**</span><span class="n">credentials</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    If the given credentials are valid, return a User object.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">backend</span> <span class="ow">in</span> <span class="n">get_backends</span><span class="p">():</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">authenticate</span><span class="p">(</span><span class="o">**</span><span class="n">credentials</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="k">except</span> <span class="n">PermissionDenied</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">None</span>
-        <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="c"># Annotate the user object with the path of the backend.</span>
-        <span class="n">user</span><span class="o">.</span><span class="n">backend</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">backend</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">backend</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">user</span>
-</pre></div>
-
-
-<p>The next step is to save the user and his corresponding backend into the session object. This can be done via the login function, present in the django.contrib.auth </p>
-<p>django.contrib.auth.login : </p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">login</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
-    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">pk</span>
-    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">BACKEND_SESSION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">backend</span>
-</pre></div>
-
-
-<p>Most of the code you see here is stripped in order to simplify the concept and have you understand it easier. After the user sends back a response to the whole auth/login process, the SessionMiddleware.process_response saves the changed session object into its database. This effectively means that next time the user accesses some of the views, the object will be loaded from this saved point.</p>
-<h2>Checking User in Session</h2>
-<p>But what happens if the user gains access to the predefined login_required views after the login process? In this case, we’re looking at a workflow structured like this:</p>
-<ul>
-<li>SessionMiddleware loads the data of the current user in the request object from the session storage</li>
-<li>AuthenticationMiddleware then loads the user from the session database and sets it as an attribute in the request object</li>
-<li>And finally, the user has passed the auth check successfully and he can access the requested page</li>
-</ul>
-<p>Again, if I break the process down and present it in a more in-depth manner, things will be structured like this:</p>
-<p>django.contrib.sessions.middleware.SessionMiddleware : Loads the session info that is related to the current user :</p>
-<div class="highlight"><pre><span class="k">class</span> <span class="nc">SessionMiddleware</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">process_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
-        <span class="n">engine</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_ENGINE</span><span class="p">)</span>
-        <span class="n">session_key</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">COOKIES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">SESSION_COOKIE_NAME</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
-        <span class="n">request</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">SessionStore</span><span class="p">(</span><span class="n">session_key</span><span class="p">)</span>
-</pre></div>
-
-
-<p>The next step to be taken is:</p>
-<p>django.contrib.auth.middleware.AuthenticationMiddleware : This part is responsible for loading the backend which was saved above (login function). It also prompts the backend 'get_user' method to load the user object. It is something like:</p>
-<div class="highlight"><pre><span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">AnonymousUser</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">user_id</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_KEY</span><span class="p">]</span>
-        <span class="n">backend_path</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">BACKEND_SESSION_KEY</span><span class="p">]</span>
-        <span class="k">assert</span> <span class="n">backend_path</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">AUTHENTICATION_BACKENDS</span>
-        <span class="n">backend</span> <span class="o">=</span> <span class="n">load_backend</span><span class="p">(</span><span class="n">backend_path</span><span class="p">)</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span> <span class="ow">or</span> <span class="n">AnonymousUser</span><span class="p">()</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">AssertionError</span><span class="p">):</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">AnonymousUser</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">user</span>
-
-<span class="n">request</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">get_user</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-</pre></div>
-
-
-<p>I should note that if the user is not found either in the session store or the authentication backend, the AnonymousUser will be returned back. After undertaking such a step, the request object will now have a ‘user’ attribute assigned to it. In such a case you can easily check if a certain user is authenticated by typing:</p>
-<div class="highlight"><pre><span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">is_authenticated</span><span class="p">():</span>
-    <span class="c">#do some auth stuff</span>
-</pre></div>
-
-
-<p>Actually, that is how login_required decorator is implemented. It checks for existing user.is_authenticated() condition on current user.</p>
-<h2>Summary</h2>
-<p>To summarize all of this, Django caches the user’s authentication backend when the login process is successful. After consecutive requests, this info gets extracted from the session store and is then used to load the user object into the current request.</p>
-<p>Finally, the views that need to check if a user is authenticated in a valid way can do so by invoking the the is_authenticated method of the aforementioned user.</p><p>There are <a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/#disqus_thread">comments</a>.</p>                </article>
+</footer><!-- /.post-info -->                <h2>Django Authentication</h2>
+<p>The existing Django Documentation explains everything about the Django authentication process in a pretty good way. Directions include adding your back end, replacing the built-in User model and many more. However, despite this good coverage, I had certain problems with seeing the big picture of the overall process ...</p>
+                <a class="readmore" href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/">read more</a>
+<p>There are <a href="http://makkalot.github.io/posts/2014/Jul/13/django-auth-workflow/#disqus_thread">comments</a>.</p>                </div><!-- /.entry-content -->
+            </article></li>
+                </ol><!-- /#posts-list -->
 <p class="paginator">
     Page 1 / 1
 </p>
-            </aside><!-- /#featured -->
+                </section><!-- /#content -->
         <section id="extras" class="body">
                 <div class="blogroll">
                         <h2>blogroll</h2>
