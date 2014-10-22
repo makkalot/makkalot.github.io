@@ -34,7 +34,7 @@
 &lt;p&gt;The backend team can use all of the programming language tricks without being afraid of polluting the representation with too many logic. &lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;I liked this idea and created a clone of this library for Python programming language. It is called (enlivepy)[https://github.com/makkalot/enlivepy]. The purpose of my current blogpost is to show you a very simple template with a navigation bar. This will illustrate the concept in a pretty easy and educational manner and it will show you how it’s actually put into practice.&lt;/p&gt;
+&lt;p&gt;I liked this idea and created a clone of this library for Python programming language. It is called &lt;a href="https://github.com/makkalot/enlivepy"&gt;enlivepy&lt;/a&gt;. The purpose of my current blogpost is to show you a very simple template with a navigation bar. This will illustrate the concept in a pretty easy and educational manner and it will show you how it’s actually put into practice.&lt;/p&gt;
 &lt;p&gt;&lt;br/&gt;&lt;/p&gt;
 &lt;h2&gt;Getting Started&lt;/h2&gt;
 &lt;p&gt;For the purpose of this blog entry I’ve created an example Django application. The mentioned application replaces the default Django templating with enlivepy html transformation library (I will explain more on this topic in another topic). To start with the application : &lt;/p&gt;
