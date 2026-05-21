@@ -1,0 +1,58 @@
+baseURL = "https://makkalot.github.io/"
+title = "Polyglot Developer"
+languageCode = "en-us"
+theme = "PaperMod"
+[pagination]
+  pagerSize = 10
+
+[params]
+  author = "Makkalot"
+  description = "A blog about Python, Django, Go, and distributed systems."
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+
+  [params.homeInfoParams]
+    Title = "Polyglot Developer"
+    Content = "Writing about Python, Django, Golang, Clojure and distributed systems."
+
+  [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/makkalot"
+  [[params.socialIcons]]
+    name = "twitter"
+    url = "https://twitter.com/makkalot"
+  [[params.socialIcons]]
+    name = "rss"
+    url = "/index.xml"
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+[menu]
+  [[menu.main]]
+    name = "Posts"
+    url = "/posts/"
+    weight = 1
+  [[menu.main]]
+    name = "Categories"
+    url = "/categories/"
+    weight = 2
+  [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 3
+  [[menu.main]]
+    name = "Contact"
+    url = "/contact/"
+    weight = 4
+  [[menu.main]]
+    name = "Hire Me"
+    url = "/hire-me/"
+    weight = 5
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
